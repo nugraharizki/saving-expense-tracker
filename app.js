@@ -42,8 +42,10 @@ const budgetSpentText = document.getElementById('budget-spent-text');
 const budgetTotalText = document.getElementById('budget-total-text');
 const budgetProgressFill = document.getElementById('budget-progress-fill');
 
-// Backend API URL
-const API_URL = 'http://localhost:3000/api';
+// Backend API URL (Auto-detect: Local vs Hosted)
+const API_URL = window.location.protocol === 'file:' 
+    ? 'http://localhost:3000/api' 
+    : '/api';
 
 // State
 let transactions = [];

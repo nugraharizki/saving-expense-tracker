@@ -14,6 +14,9 @@ const JWT_SECRET = 'nexus_super_secret_key_123';
 app.use(cors());
 app.use(express.json());
 
+// Serve Static Frontend Files (For Glitch/Single Node Deployment)
+app.use(express.static(__dirname));
+
 // Helper: Read Database
 function readDB() {
     try {
