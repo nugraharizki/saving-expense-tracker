@@ -42,12 +42,8 @@ const budgetSpentText = document.getElementById('budget-spent-text');
 const budgetTotalText = document.getElementById('budget-total-text');
 const budgetProgressFill = document.getElementById('budget-progress-fill');
 
-// Backend API URL (Auto-detect: Local vs Hosted)
-const API_URL = window.location.protocol === 'file:' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
-
 // State
+let currentUser = null;
 let transactions = [];
 let expenseChartInstance = null;
 let currentBudget = 0;
@@ -70,7 +66,6 @@ function applyTheme() {
         themeIconDark.style.display = 'none';
         themeText.textContent = 'Light Mode';
     }
-    // Update chart colors if it exists
     if (expenseChartInstance) updateChart();
 }
 applyTheme();
@@ -82,24 +77,25 @@ btnThemeToggle.addEventListener('click', (e) => {
     applyTheme();
 });
 
-// Helper: Get Auth Headers
-function getAuthHeaders() {
-    const token = localStorage.getItem('nexus_token');
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
+// Database Helpers (LocalStorage)
+function getDB() {
+    const data = localStorage.getItem('nexus_db');
+    if (data) return JSON.parse(data);
+    return { users: [], transactions: [], budgets: [] };
+}
+function saveDB(db) {
+    localStorage.setItem('nexus_db', JSON.stringify(db));
 }
 
 // Check Auth State
 function checkAuth() {
-    const token = localStorage.getItem('nexus_token');
-    const username = localStorage.getItem('nexus_username');
+    const loggedInUser = localStorage.getItem('nexus_current_user');
     
-    if (token && username) {
+    if (loggedInUser) {
+        currentUser = JSON.parse(loggedInUser);
         authOverlay.classList.remove('active');
         appContent.style.display = 'flex';
-        userGreeting.textContent = username;
+        userGreeting.textContent = currentUser.username;
         initApp();
     } else {
         authOverlay.classList.add('active');
@@ -109,8 +105,8 @@ function checkAuth() {
 
 // Logout
 btnLogout.addEventListener('click', () => {
-    localStorage.removeItem('nexus_token');
-    localStorage.removeItem('nexus_username');
+    localStorage.removeItem('nexus_current_user');
+    currentUser = null;
     transactions = [];
     checkAuth();
 });
@@ -129,85 +125,54 @@ showLogin.addEventListener('click', (e) => {
 });
 
 // Login Submit
-loginForm.addEventListener('submit', async (e) => {
+loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
 
-    try {
-        const res = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            localStorage.setItem('nexus_token', data.token);
-            localStorage.setItem('nexus_username', data.username);
-            checkAuth();
-        } else {
-            alert(data.error);
-        }
-    } catch (err) {
-        alert('Failed to connect to backend.');
+    const db = getDB();
+    const user = db.users.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+        localStorage.setItem('nexus_current_user', JSON.stringify({ id: user.id, username: user.username }));
+        checkAuth();
+    } else {
+        alert('Invalid username or password.');
     }
 });
 
 // Register Submit
-registerForm.addEventListener('submit', async (e) => {
+registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
 
-    try {
-        const res = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            alert('Registration successful! Please login.');
-            showLogin.click();
-        } else {
-            alert(data.error);
-        }
-    } catch (err) {
-        alert('Failed to connect to backend.');
+    const db = getDB();
+    if (db.users.find(u => u.username === username)) {
+        alert('Username already exists!');
+        return;
     }
+
+    const newUser = { id: Date.now().toString(), username, password };
+    db.users.push(newUser);
+    saveDB(db);
+
+    alert('Registration successful! Please login.');
+    showLogin.click();
 });
 
 // Fetch Budget
-async function fetchBudget() {
-    try {
-        const response = await fetch(`${API_URL}/budget`, { headers: getAuthHeaders() });
-        if (response.ok) {
-            const data = await response.json();
-            currentBudget = data.amount;
-        }
-    } catch (error) {
-        console.error('Error fetching budget', error);
-    }
+function fetchBudget() {
+    const db = getDB();
+    const userBudget = db.budgets.find(b => b.userId === currentUser.id);
+    currentBudget = userBudget ? userBudget.amount : 0;
 }
 
 // Fetch Transactions
-async function fetchTransactions() {
-    try {
-        const response = await fetch(`${API_URL}/transactions`, {
-            headers: getAuthHeaders()
-        });
-        if (response.status === 401 || response.status === 403) {
-            btnLogout.click();
-            return;
-        }
-        transactions = await response.json();
-        refreshUI();
-    } catch (error) {
-        console.error('Error fetching transactions:', error);
-        transactionListEl.innerHTML = '<div class="empty-state" style="color: var(--color-expense);">Error loading data. Is the backend running?</div>';
-    }
+function fetchTransactions() {
+    const db = getDB();
+    transactions = db.transactions.filter(t => t.userId === currentUser.id);
+    refreshUI();
 }
 
 // Get filtered transactions based on selected month
@@ -277,24 +242,22 @@ function updateBudgetProgress() {
 }
 
 // Set Budget
-btnSetBudget.addEventListener('click', async () => {
+btnSetBudget.addEventListener('click', () => {
     const input = prompt('Enter your monthly budget limit (Rp):', currentBudget || '');
     if (input === null) return;
     const amount = Number(input.replace(/[^0-9]/g, ''));
     
-    try {
-        const res = await fetch(`${API_URL}/budget`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ amount })
-        });
-        if (res.ok) {
-            currentBudget = amount;
-            updateBudgetProgress();
-        }
-    } catch (e) {
-        alert('Failed to update budget.');
+    const db = getDB();
+    const existingIndex = db.budgets.findIndex(b => b.userId === currentUser.id);
+    if (existingIndex >= 0) {
+        db.budgets[existingIndex].amount = amount;
+    } else {
+        db.budgets.push({ userId: currentUser.id, amount });
     }
+    saveDB(db);
+
+    currentBudget = amount;
+    updateBudgetProgress();
 });
 
 // Update Dashboard Summaries
@@ -432,7 +395,7 @@ function renderTransactions() {
 }
 
 // Add Transaction
-async function addTransaction(e) {
+function addTransaction(e) {
     e.preventDefault();
 
     const type = document.getElementById('type').value;
@@ -443,47 +406,31 @@ async function addTransaction(e) {
 
     if (!amount || !description || !date) return;
 
-    const transaction = { type, category, amount, description, date };
+    const newTransaction = { 
+        id: Date.now().toString(),
+        userId: currentUser.id,
+        type, category, amount, description, date 
+    };
 
-    try {
-        const response = await fetch(`${API_URL}/transactions`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(transaction)
-        });
+    const db = getDB();
+    db.transactions.push(newTransaction);
+    saveDB(db);
 
-        if (response.ok) {
-            const newTransaction = await response.json();
-            transactions.push(newTransaction);
-            refreshUI();
-            transactionForm.reset();
-            closeModal();
-        } else {
-            alert('Failed to add transaction');
-        }
-    } catch (error) {
-        alert('Failed to add transaction. Is the backend running?');
-    }
+    transactions.push(newTransaction);
+    refreshUI();
+    transactionForm.reset();
+    closeModal();
 }
 
 // Delete Transaction
-window.deleteTransaction = async function(id) {
+window.deleteTransaction = function(id) {
     if(confirm('Are you sure you want to delete this transaction?')) {
-        try {
-            const response = await fetch(`${API_URL}/transactions/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+        const db = getDB();
+        db.transactions = db.transactions.filter(t => t.id !== id);
+        saveDB(db);
 
-            if (response.ok) {
-                transactions = transactions.filter(t => t.id !== id);
-                refreshUI();
-            } else {
-                alert('Failed to delete transaction');
-            }
-        } catch (error) {
-            alert('Failed to delete transaction. Is the backend running?');
-        }
+        transactions = transactions.filter(t => t.id !== id);
+        refreshUI();
     }
 }
 
@@ -536,10 +483,9 @@ transactionModal.addEventListener('click', (e) => {
 transactionForm.addEventListener('submit', addTransaction);
 
 // Init App Data
-async function initApp() {
-    transactionListEl.innerHTML = '<div class="empty-state">Loading data from backend...</div>';
-    await fetchBudget();
-    await fetchTransactions();
+function initApp() {
+    fetchBudget();
+    fetchTransactions();
 }
 
 // Initial Boot
