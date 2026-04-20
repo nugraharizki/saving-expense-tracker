@@ -1,0 +1,15 @@
+{
+  "users": [],
+  "transactions": [
+    {
+      "id": "1776676336888",
+      "userId": "1776675106648",
+      "type": "expense",
+      "category": "Transportation",
+      "amount": 7000,
+      "description": "TJ dan CL",
+      "date": "2026-04-20"
+    }
+  ],
+  "budgets": []
+}
