@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: nexus-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    rootDir: backend
+    
+  - type: web
+    name: nexus-frontend
+    env: static
+    buildCommand: ""
+    staticPublishPath: ./
+    envVars:
+      - key: API_URL
+        value: "https://nexus-backend.onrender.com/api"

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Saving & Expense Tracker</title>
+    <meta name="description" content="A premium web application for tracking savings and expenses with a beautiful, dynamic design.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><rect width='192' height='192' fill='%233B82F6'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Authentication Overlay -->
+    <div id="auth-overlay" class="auth-overlay active">
+        <div class="auth-box glass">
+            <div class="logo" style="justify-content: center; margin-bottom: 24px;">
+                <div class="logo-icon"></div>
+                <h1>Nexus</h1>
+            </div>
+            
+            <div id="login-form-container">
+                <h3 style="text-align: center; margin-bottom: 20px;">Welcome Back</h3>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <p style="text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
+                        Don't have an account? <a href="#" id="show-register">Register here</a>
+                    </p>
+                </form>
+            </div>
+
+            <div id="register-form-container" style="display: none;">
+                <h3 style="text-align: center; margin-bottom: 20px;">Create Account</h3>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="reg-username">Username</label>
+                        <input type="text" id="reg-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                    <p style="text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
+                        Already have an account? <a href="#" id="show-login">Login here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App UI -->
+    <div class="app-container" id="app-content" style="display: none;">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar glass">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>Nexus</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="nav-dashboard">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <!-- Theme Toggle Button -->
+                <a href="#" class="nav-item" id="btn-theme-toggle">
+                    <svg id="theme-icon-dark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg id="theme-icon-light" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <span id="theme-text">Light Mode</span>
+                </a>
+            </nav>
+            <div style="margin-top: auto;">
+                <button id="btn-logout" class="btn w-100" style="background: rgba(128,128,128,0.2); color: var(--text-primary);">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-title">
+                    <h2>Overview, <span id="user-greeting">User</span></h2>
+                    <p>Track your financial journey.</p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <!-- Month Filter -->
+                    <input type="month" id="month-filter" class="form-input" style="padding: 10px 14px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); font-family: inherit;">
+                    <button class="btn" id="btn-export-csv" style="background: rgba(128,128,128,0.2); color: var(--text-primary);">📥 Export</button>
+                    <button class="btn btn-primary" id="btn-add-transaction">+ New Transaction</button>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Budget Goal Section -->
+                <div class="card glass" style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 18px; font-weight: 600;">Monthly Budget Goal</h3>
+                        <button id="btn-set-budget" class="btn" style="padding: 6px 12px; font-size: 13px; background: var(--accent-primary); color: white;">Set Budget</button>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+                            <span id="budget-spent-text">Rp 0 spent</span>
+                            <span id="budget-total-text">of Rp 0 limit</span>
+                        </div>
+                        <div class="progress-bar-bg" style="width: 100%; height: 12px; background: rgba(128,128,128,0.2); border-radius: 10px; overflow: hidden;">
+                            <div id="budget-progress-fill" style="height: 100%; width: 0%; background: var(--color-income); transition: width 0.5s ease, background-color 0.5s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="card glass summary-card total-balance">
+                        <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                        <div class="card-info">
+                            <p class="label">Total Balance</p>
+                            <h3 id="total-balance">Rp 0</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="card glass summary-card income">
+                        <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
+                        <div class="card-info">
+                            <p class="label">Income</p>
+                            <h3 id="total-income">Rp 0</h3>
+                        </div>
+                    </div>
+
+                    <div class="card glass summary-card expense">
+                        <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></div>
+                        <div class="card-info">
+                            <p class="label">Expense</p>
+                            <h3 id="total-expense">Rp 0</h3>
+                        </div>
+                    </div>
+
+                    <div class="card glass summary-card saving">
+                        <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
+                        <div class="card-info">
+                            <p class="label">Total Savings</p>
+                            <h3 id="total-savings">Rp 0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    <!-- Chart Section -->
+                    <div class="chart-container card glass" style="flex: 1; min-width: 300px; padding: 24px; display: flex; flex-direction: column; align-items: center;">
+                        <h3 style="align-self: flex-start; margin-bottom: 20px;">Financial Breakdown</h3>
+                        <div style="position: relative; width: 100%; max-width: 300px; aspect-ratio: 1;">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="recent-transactions card glass" style="flex: 2; min-width: 400px;">
+                        <div class="card-header">
+                            <h3>Recent Transactions</h3>
+                        </div>
+                        <div class="transactions-list" id="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                            <!-- Transactions will be rendered here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for New Transaction -->
+    <div class="modal-overlay" id="transaction-modal">
+        <div class="modal glass">
+            <div class="modal-header">
+                <h3>Add Transaction</h3>
+                <button class="btn-close" id="btn-close-modal">&times;</button>
+            </div>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" required class="form-input">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                        <option value="saving">Saving</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required class="form-input">
+                        <option value="Food & Dining">Food & Dining</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills & Utilities">Bills & Utilities</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Investment">Investment</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount (Rp)</label>
+                    <input type="number" id="amount" class="form-input" placeholder="e.g. 50000" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" class="form-input" placeholder="e.g. Salary, Groceries..." required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Save Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
