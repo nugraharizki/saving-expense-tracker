@@ -485,20 +485,151 @@ body {
     border-radius: 10px;
 }
 
+/* Layout utilities from removed inline styles */
+.header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.month-filter-custom {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.btn-export {
+    background: rgba(128, 128, 128, 0.2);
+    color: var(--text-primary);
+}
+
+.dashboard-bottom-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.chart-container {
+    flex: 1;
+    min-width: 300px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.recent-transactions {
+    flex: 2;
+    min-width: 400px;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .app-container {
         flex-direction: column;
+        padding: 16px;
     }
     .sidebar {
         width: 100%;
         height: auto;
-        padding: 20px;
+        padding: 16px;
         position: relative;
         top: 0;
         margin-bottom: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .nav-menu {
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .sidebar > div:last-child {
+        margin-top: 0 !important;
     }
     .logo {
-        margin-bottom: 24px;
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .app-container {
+        padding: 12px;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .header-controls {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .month-filter-custom {
+        flex: 1;
+        min-width: 100%;
+        margin-bottom: 4px;
+    }
+    .header-controls > .btn {
+        flex: 1;
+    }
+    .summary-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .summary-card {
+        padding: 16px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .chart-container {
+        min-width: 100%;
+        padding: 16px;
+    }
+    .recent-transactions {
+        min-width: 100%;
+    }
+    .sidebar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .nav-menu {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+    .nav-item {
+        flex: 1;
+        justify-content: center;
+        font-size: 14px;
+        padding: 10px;
+    }
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .t-amount {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 400px) {
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+    .auth-box {
+        padding: 24px;
+    }
+    .modal {
+        padding: 20px;
     }
 }

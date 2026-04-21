@@ -35,9 +35,12 @@
                         <input type="password" id="login-password" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>
-                    <p style="text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
-                        Don't have an account? <a href="#" id="show-register">Register here</a>
-                    </p>
+                    <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+                        <a href="#" id="forgot-password" style="font-size: 14px; color: var(--accent-primary);">Forgot Password?</a>
+                        <p style="font-size: 14px; color: var(--text-secondary);">
+                            Don't have an account? <a href="#" id="show-register">Register here</a>
+                        </p>
+                    </div>
                 </form>
             </div>
 
@@ -93,10 +96,10 @@
                     <h2>Overview, <span id="user-greeting">User</span></h2>
                     <p>Track your financial journey.</p>
                 </div>
-                <div style="display: flex; gap: 12px; align-items: center;">
+                <div class="header-controls">
                     <!-- Month Filter -->
-                    <input type="month" id="month-filter" class="form-input" style="padding: 10px 14px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); font-family: inherit;">
-                    <button class="btn" id="btn-export-csv" style="background: rgba(128,128,128,0.2); color: var(--text-primary);">📥 Export</button>
+                    <input type="month" id="month-filter" class="form-input month-filter-custom">
+                    <button class="btn btn-export" id="btn-export-csv">📥 Export</button>
                     <button class="btn btn-primary" id="btn-add-transaction">+ New Transaction</button>
                 </div>
             </header>
@@ -154,9 +157,9 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                <div class="dashboard-bottom-row">
                     <!-- Chart Section -->
-                    <div class="chart-container card glass" style="flex: 1; min-width: 300px; padding: 24px; display: flex; flex-direction: column; align-items: center;">
+                    <div class="chart-container card glass">
                         <h3 style="align-self: flex-start; margin-bottom: 20px;">Financial Breakdown</h3>
                         <div style="position: relative; width: 100%; max-width: 300px; aspect-ratio: 1;">
                             <canvas id="expenseChart"></canvas>
@@ -164,7 +167,7 @@
                     </div>
 
                     <!-- Recent Transactions -->
-                    <div class="recent-transactions card glass" style="flex: 2; min-width: 400px;">
+                    <div class="recent-transactions card glass">
                         <div class="card-header">
                             <h3>Recent Transactions</h3>
                         </div>
